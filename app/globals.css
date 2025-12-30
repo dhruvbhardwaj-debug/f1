@@ -3,10 +3,15 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Force the root containers to fill the viewport 
+  without extra spacing that could shift fixed elements.
+*/
 html,
 body,
-:root{
-  height :100%
+:root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 @theme inline {
@@ -127,5 +132,7 @@ body,
   }
   body {
     @apply bg-background text-foreground;
+    /* Prevent layout shift when modal opens */
+    overflow-x: hidden; 
   }
 }
