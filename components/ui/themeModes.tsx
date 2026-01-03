@@ -3,38 +3,33 @@
 import * as React from "react"
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
-
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 
 export function ModeToggle() {
-  const { setTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = React.useState(false)
+
+  // Wait until mounted to avoid showing both icons on page load
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) return <Button variant="outline" size="icon" className="bg-transparent border-0" />
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon">
-          <Sun className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-          <Moon className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-          <span className="sr-only">Toggle theme</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>
-          Light
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
-          Dark
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>
-          System
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Button 
+      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      variant="outline" 
+      size="icon" 
+      className="bg-transparent border-0 relative h-10 w-10 flex items-center justify-center"
+    >
+      {/* If theme is light, ONLY render Sun. If dark, ONLY render Moon */}
+      {theme === "light" ? (
+        <Sun className="h-[1.2rem] w-[1.2rem] transition-all" />
+      ) : (
+        <Moon className="h-[1.2rem] w-[1.2rem] transition-all" />
+      )}
+      <span className="sr-only">Toggle theme</span>
+    </Button>
   )
-}
+} 
