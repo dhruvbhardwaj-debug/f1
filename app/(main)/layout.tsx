@@ -1,6 +1,4 @@
 import { NavigationSidebar } from "@/components/navigation/navigation-sidebar";
-import { ModalProvider } from "@/components/providers/modal-provider";
-
 const MainLayout = async ({
   children
 }: {
@@ -8,7 +6,7 @@ const MainLayout = async ({
 }) => {
   return ( 
     <div className="h-full flex">
-      <div className="w-[72px] flex-shrink-0">
+      <div className="w-[72px] shrink-0">
         <NavigationSidebar />
       </div>
       <main className="flex-1 h-full overflow-y-auto">
