@@ -23,10 +23,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider >
       <html lang="en" suppressHydrationWarning>
         {/* Added bg-zinc-600 to the body class list below */}
-        <body className={`${geistMono.className} ${geistSans.variable} ${geistMono.variable} bg-[#313338] antialiased`}>
+        <body className={` ${geistSans.variable} ${geistMono.variable} bg-[#313338] antialiased`}>
           <ThemeProvider
             attribute="class" 
             defaultTheme="dark" 
