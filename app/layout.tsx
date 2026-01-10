@@ -23,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider >
+    <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
       <html lang="en" suppressHydrationWarning>
         {/* Added bg-zinc-600 to the body class list below */}
         <body className={` ${geistSans.variable} ${geistMono.variable} bg-[#313338] antialiased`}>
