@@ -8,6 +8,7 @@ import axios from "axios";
 import { useParams, useRouter } from "next/navigation";
 import { ChannelType } from "@prisma/client";
 import qs from "query-string";
+import { Terminal, Cpu } from "lucide-react";
 
 import {
   Dialog,
@@ -38,9 +39,9 @@ import { useModal } from "@/hooks/use-modal-store";
 const formSchema = z.object({
   name: z
     .string()
-    .min(1, { message: "Channel name is required." })
+    .min(1, { message: "Sector ID is required." })
     .refine((name) => name !== "general", {
-      message: "Channel name cannot be 'general'"
+      message: "Sector name cannot be 'general'"
     }),
   type: z.enum(ChannelType)
 });
@@ -95,32 +96,42 @@ export function CreateChannelModal() {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={handleClose}>
-      <DialogContent className="bg-white text-black p-0 overflow-hidden">
-        <DialogHeader className="pt-8 px-6">
-          <DialogTitle className="text-2xl text-center font-bold">
-            Create Channel
+      <DialogContent className="bg-[#1e1e2b] text-zinc-200 p-0 overflow-hidden border border-zinc-800 shadow-2xl rounded-sm max-w-md">
+        <DialogHeader className="pt-8 px-6 bg-[#161621] border-b border-zinc-800">
+          <div className="flex items-center gap-x-2 mb-1">
+            <Cpu className="h-4 w-4 text-red-600 animate-pulse" />
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 italic">
+              System_Deployment
+            </span>
+          </div>
+          <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter text-white text-left">
+            Initialize New Sector
           </DialogTitle>
         </DialogHeader>
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="space-y-8 px-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-6">
+            <div className="space-y-6 px-6">
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="uppercase text-xs font-bold text-zinc-500 dark:text-secondary/70">
-                      Channel Name
+                    <FormLabel className="uppercase text-[10px] font-black tracking-widest text-zinc-500 italic">
+                      Sector Identification (Name)
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        disabled={isLoading}
-                        placeholder="Enter channel name"
-                        className="bg-zinc-300/50 border-0 focus-visible: ring-0 text-black focus-visible:ring-offset-0"
-                        {...field}
-                      />
+                      <div className="relative group">
+                        <Terminal className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-600 group-focus-within:text-red-600 transition" />
+                        <Input
+                          disabled={isLoading}
+                          placeholder="e.g. engine-telemetry"
+                          className="bg-black/20 border-zinc-800 border-x-0 border-t-0 border-b-2 rounded-none pl-10 focus-visible:ring-0 text-zinc-200 focus-visible:ring-offset-0 focus:border-red-600 transition-all font-mono text-sm"
+                          {...field}
+                        />
+                      </div>
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-[10px] font-bold text-red-500 uppercase italic" />
                   </FormItem>
                 )}
               />
@@ -129,37 +140,42 @@ export function CreateChannelModal() {
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Channel Type</FormLabel>
+                    <FormLabel className="uppercase text-[10px] font-black tracking-widest text-zinc-500 italic">
+                      Transmission Protocol (Type)
+                    </FormLabel>
                     <Select
                       disabled={isLoading}
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger className="bg-zinc-300/50 border-0 focus:ring-0 text-black ring-offset-0 focus:ring-offset-0 capitalize outline-none">
-                          <SelectValue placeholder="Select a channel type" />
+                        <SelectTrigger className="bg-black/20 border-zinc-800 border-x-0 border-t-0 border-b-2 rounded-none focus:ring-0 text-zinc-300 ring-offset-0 focus:ring-offset-0 capitalize outline-none font-mono text-sm focus:border-red-600 transition-all">
+                          <SelectValue placeholder="Select protocol" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="bg-[#161621] border-zinc-800 text-zinc-300 rounded-none">
                         {Object.values(ChannelType).map((type) => (
                           <SelectItem
                             key={type}
                             value={type}
-                            className="capitalize"
+                            className="capitalize focus:bg-red-600 focus:text-white font-mono text-xs"
                           >
                             {type.toLowerCase()}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormMessage />
+                    <FormMessage className="text-[10px] font-bold text-red-500 uppercase italic" />
                   </FormItem>
                 )}
               />
             </div>
-            <DialogFooter className="bg-gray-100 px-6 py-4">
-              <Button disabled={isLoading} variant="primary">
-                Create
+            <DialogFooter className="bg-[#161621] px-6 py-4 border-t border-zinc-800">
+              <Button 
+                disabled={isLoading} 
+                className="w-full bg-red-600 hover:bg-red-700 text-white font-black uppercase italic tracking-widest rounded-sm transition-all shadow-[0_0_15px_rgba(220,38,38,0.2)]"
+              >
+                Deploy_Sector
               </Button>
             </DialogFooter>
           </form>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-hooks/set-state-in-effect */
 
@@ -10,7 +11,9 @@ import {
   FileIcon,
   ShieldAlert,
   ShieldCheck,
-  Trash
+  Trash,
+  Radio,
+  Clock
 } from "lucide-react";
 import Image from "next/image";
 import * as z from "zod";
@@ -48,15 +51,13 @@ interface ChatItemProps {
 
 const roleIconMap = {
   GUEST: null,
-  MODERATOR: <ShieldCheck className="h-4 w-4 ml-2 text-indigo-500" />,
-  ADMIN: <ShieldAlert className="h-4 w-4 ml-2 text-rose-500" />
+  MODERATOR: <ShieldCheck className="h-3.5 w-3.5 ml-1 text-emerald-500" />,
+  ADMIN: <ShieldAlert className="h-3.5 w-3.5 ml-1 text-red-600" />
 };
 
 const formSchema = z.object({
   content: z.string().min(1)
 });
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 
 export function ChatItem({
   id,
@@ -75,25 +76,19 @@ export function ChatItem({
   const [fileType, setFileType] = useState<'pdf' | 'image' | null>(null);
   const { onOpen } = useModal();
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  useEffect(() => { setIsMounted(true); }, []);
 
   const params = useParams();
   const router = useRouter();
 
-  // Handle Logic for Member Clicking
   const onMemberClick = () => {
     if (member.id === currentMember.id) return;
     router.push(`/servers/${params?.serverId}/conversations/${member.id}`);
   };
 
-  // Handle Escape Key for Editing
   useEffect(() => {
     const handleKeyDown = (event: any) => {
-      if (event.key === "Escape" || event.keyCode === 27) {
-        setIsEditing(false);
-      }
+      if (event.key === "Escape" || event.keyCode === 27) setIsEditing(false);
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
@@ -108,48 +103,29 @@ export function ChatItem({
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const url = qs.stringifyUrl({
-        url: `${socketUrl}/${id}`,
-        query: socketQuery
-      });
+      const url = qs.stringifyUrl({ url: `${socketUrl}/${id}`, query: socketQuery });
       await axios.patch(url, values);
       form.reset();
       setIsEditing(false);
-    } catch (error) {
-      console.error(error);
-    }
+    } catch (error) { console.error(error); }
   };
 
-  useEffect(() => {
-    form.reset({ content });
-  }, [content, form]);
+  useEffect(() => { form.reset({ content }); }, [content, form]);
 
-  // Detect file type safely
   useEffect(() => {
-    if (!fileUrl || !isMounted) {
-      setFileType(null);
-      return;
-    }
-
+    if (!fileUrl || !isMounted) { setFileType(null); return; }
     const detectFileType = async () => {
       try {
         const response = await fetch(fileUrl, { method: 'HEAD' });
         const contentType = response.headers.get('content-type');
         if (contentType?.includes('pdf')) setFileType('pdf');
-        else if (contentType?.includes('image')) setFileType('image');
         else setFileType('image');
-      } catch (error) {
-        setFileType('image');
-      }
+      } catch (error) { setFileType('image'); }
     };
-
     detectFileType();
   }, [fileUrl, isMounted]);
 
-  // If not mounted, return the basic shell to avoid hydration mismatch
-  if (!isMounted) {
-    return null; 
-  }
+  if (!isMounted) return null; 
 
   const isPDF = fileType === 'pdf' && fileUrl;
   const isImage = fileType === 'image' && fileUrl;
@@ -161,79 +137,116 @@ export function ChatItem({
   const canEditMessage = !deleted && isOwner && !fileUrl;
 
   return (
-    <div className="relative group flex items-center hover:bg-black/5 p-4 transition w-full">
-      <div className="group flex gap-x-2 items-center w-full">
-        <div onClick={onMemberClick} className="cursor-pointer hover:drop-shadow-md transition">
-          <UserAvatar src={member.profile.imageUrl} />
+    <div className="relative group flex items-start p-4 transition-all w-full border-l-2 border-transparent hover:border-red-600 hover:bg-zinc-800/10 dark:hover:bg-white/5">
+      <div className="flex gap-x-3 items-start w-full">
+        {/* User Avatar with Online status glow */}
+        <div onClick={onMemberClick} className="cursor-pointer transition shrink-0">
+          <UserAvatar 
+            src={member.profile.imageUrl} 
+            className="h-10 w-10 border border-zinc-700 group-hover:border-red-600/50"
+          />
         </div>
+
         <div className="flex flex-col w-full">
+          {/* Technical Header */}
           <div className="flex items-center gap-x-2">
             <div className="flex items-center">
-              <p onClick={onMemberClick} className="font-semibold text-sm hover:underline cursor-pointer">
-                {member.profile.name.replace(" null", "")}
+              <p onClick={onMemberClick} className="font-black text-xs uppercase italic tracking-tighter text-zinc-900 dark:text-white hover:underline cursor-pointer">
+                {member.profile.name}
               </p>
               <ActionTooltip label={member.role}>
                 {roleIconMap[member.role]}
               </ActionTooltip>
             </div>
-            <span className="text-xs text-zinc-500 dark:text-zinc-400">
+            <div className="flex items-center gap-x-1 text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
+              <Clock className="h-3 w-3" />
               {timestamp}
-            </span>
+            </div>
           </div>
 
+          {/* Media Handling */}
           {isImage && (
-            <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="relative aspect-square rounded-md mt-2 overflow-hidden border flex items-center bg-secondary h-48 w-48">
-              <Image src={fileUrl} alt={content} fill className="object-cover" />
-            </a>
-          )}
-
-          {isPDF && (
-            <div className="relative flex items-center p-3 mt-2 rounded-md bg-background/10 border border-indigo-200/20">
-              <FileIcon className="h-10 w-10 fill-indigo-200 stroke-indigo-400" />
-              <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="ml-2 text-sm text-indigo-500 dark:text-indigo-400 hover:underline break-all">
-                PDF File
-              </a>
+            <div className="mt-3 relative h-48 w-48 border-2 border-zinc-800 rounded-sm overflow-hidden group/image">
+                <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                    <Image src={fileUrl} alt={content} fill className="object-cover transition-transform group-hover/image:scale-105" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/image:opacity-100 flex items-center justify-center transition">
+                        <span className="text-[10px] font-black uppercase text-white italic tracking-widest">View_Telemetry</span>
+                    </div>
+                </a>
             </div>
           )}
 
-          {!fileUrl && !isEditing && (
-            <p className={cn("text-sm text-zinc-600 dark:text-zinc-300", deleted && "italic text-zinc-500 dark:text-zinc-400 text-xs mt-1")}>
-              {content}
-              {isUpdated && !deleted && (
-                <span className="text-[10px] mx-2 text-zinc-500 dark:text-zinc-400">(edited)</span>
-              )}
-            </p>
+          {isPDF && (
+            <div className="relative flex items-center p-3 mt-3 rounded-sm bg-zinc-900/50 border border-zinc-800 group/pdf">
+              <FileIcon className="h-8 w-8 text-red-600 fill-red-600/10" />
+              <div className="ml-3 flex flex-col">
+                  <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="text-xs font-black uppercase italic tracking-widest text-zinc-300 hover:text-red-500 transition">
+                    PDF_DATA_STREAM
+                  </a>
+                  <span className="text-[9px] font-mono text-zinc-600">ENCRYPTED_TRANSFER.PDF</span>
+              </div>
+            </div>
           )}
 
+          {/* Message Content */}
+          {!fileUrl && !isEditing && (
+            <div className="relative mt-1">
+                 <p className={cn(
+                    "text-[13px] leading-relaxed transition-colors",
+                    deleted ? "italic text-zinc-500 text-xs mt-1" : "text-zinc-700 dark:text-zinc-300"
+                )}>
+                {content}
+                {isUpdated && !deleted && (
+                    <span className="text-[9px] font-mono mx-2 text-red-600/60 font-bold uppercase tracking-tighter">(sync_edit)</span>
+                )}
+                </p>
+            </div>
+          )}
+
+          {/* Edit Terminal */}
           {!fileUrl && isEditing && (
             <Form {...form}>
-              <form className="flex items-center w-full gap-x-2 pt-2" onSubmit={form.handleSubmit(onSubmit)}>
+              <form className="flex flex-col w-full gap-y-2 pt-2" onSubmit={form.handleSubmit(onSubmit)}>
                 <FormField control={form.control} name="content" render={({ field }) => (
                   <FormItem className="flex-1">
                     <FormControl>
                       <div className="relative w-full">
-                        <Input disabled={isLoading} placeholder="Edited message" className="p-2 bg-zinc-200/90 dark:bg-zinc-700/75 border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-zinc-600 dark:text-zinc-200" {...field} />
+                        <Input 
+                            disabled={isLoading} 
+                            className="bg-zinc-900/50 border-zinc-800 text-[13px] font-medium focus-visible:ring-red-600 focus-visible:ring-offset-0 text-white rounded-sm" 
+                            {...field} 
+                        />
                       </div>
                     </FormControl>
                   </FormItem>
                 )} />
-                <Button disabled={isLoading} size="sm" variant="primary">Save</Button>
+                <div className="flex items-center gap-x-2">
+                    <Button disabled={isLoading} size="sm" className="bg-red-600 hover:bg-red-700 text-white font-black italic uppercase text-[10px] h-7 px-4">Save_Changes</Button>
+                    <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">Press ESC to abort mission</span>
+                </div>
               </form>
-              <span className="text-[10px] mt-1 text-zinc-400">Press escape to cancel, enter to save</span>
             </Form>
           )}
         </div>
       </div>
       
+      {/* Quick Action Hub */}
       {canDeleteMessage && (
-        <div className="opacity-0 group-hover:opacity-100 flex items-center gap-x-2 absolute p-1 top-1 right-5 bg-white dark:bg-zinc-800 border rounded-sm shadow-sm transition z-50">
+        <div className="opacity-0 group-hover:opacity-100 flex items-center gap-x-1 absolute -top-2 right-5 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-sm shadow-xl transition-all z-50 overflow-hidden">
           {canEditMessage && (
-            <ActionTooltip label="Edit">
-              <Edit onClick={() => setIsEditing(true)} className="cursor-pointer w-4 h-4 text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition" />
+            <ActionTooltip label="Edit Feed">
+              <button onClick={() => setIsEditing(true)} className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition">
+                <Edit className="w-3.5 h-3.5 text-zinc-500 hover:text-red-500" />
+              </button>
             </ActionTooltip>
           )}
-          <ActionTooltip label="Delete">
-            <Trash onClick={() => onOpen("deleteMessage", { apiUrl: `${socketUrl}/${id}`, query: socketQuery })} className="cursor-pointer w-4 h-4 text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition" />
+          <ActionTooltip label="Purge Data">
+            <button 
+                onClick={() => onOpen("deleteMessage", { apiUrl: `${socketUrl}/${id}`, query: socketQuery })} 
+                className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition"
+            >
+              <Trash className="w-3.5 h-3.5 text-zinc-500 hover:text-red-600" />
+            </button>
           </ActionTooltip>
         </div>
       )}
