@@ -1,48 +1,61 @@
 "use client"
+
 import Image from "next/image"
-import { useParams,useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 
 import { cn } from "@/lib/utils"
 import { ActionTooltip } from "../ui/action-tooltip"
 
-interface NavigationItemProps{
-    id:string;
-    imageUrl:string;
-    name:string;
+interface NavigationItemProps {
+    id: string;
+    imageUrl: string;
+    name: string;
 }
-export const NavigationItem=({id,imageUrl,name}:NavigationItemProps)=>{
-    
-    const params= useParams();
+
+export const NavigationItem = ({ id, imageUrl, name }: NavigationItemProps) => {
+    const params = useParams();
     const router = useRouter();
 
+    const isActive = params?.serverId === id;
 
-return (
-    <ActionTooltip side="right" label={name} align="center">
-        <button 
-            onClick={() => router.push(`/servers/${id}`)} // Fixed: added navigation
-            className="group relative flex items-center w-full" // Added w-full to center content
-        >
-            {/* Active Indicator Bar */}
-            <div className={cn(
-                "absolute left-0 bg-primary rounded-r-full transition-all w-[4px]", // Fixed: w-full -> w-[4px]
-                params?.serverId !== id && "group-hover:h-[20px]",
-                params?.serverId === id ? "h-[36px]" : "h-[8px]" // Fixed: added "px" to 36
-            )} />
+    return (
+        <ActionTooltip side="right" label={name} align="center">
+            <button
+                onClick={() => router.push(`/servers/${id}`)}
+                className="group relative flex items-center w-full mb-1"
+            >
+                {/* F1 Active Indicator (The "Ready" Light) */}
+                <div className={cn(
+                    "absolute left-0 bg-red-600 rounded-r-full transition-all duration-300 w-[4px]",
+                    !isActive && "group-hover:h-[20px] opacity-0 group-hover:opacity-100",
+                    isActive ? "h-[36px] opacity-100 shadow-[0_0_10px_rgba(220,38,38,0.8)]" : "h-[8px]"
+                )} />
 
-            {/* Image Container */}
-            <div className={cn(
-                "relative group flex mx-auto h-[48px] w-[48px] rounded-[24px] group-hover:rounded-[16px] transition-all overflow-hidden", // Fixed: Added w-[48px] and mx-auto
-                params?.serverId === id && "bg-primary/10 text-primary rounded-[16px]"
-            )}>
-                <Image 
-                    fill
-                    src={imageUrl}
-                    alt="Channel"
-                    className="object-cover" // Added to prevent image stretching
-                />
-            </div>
-        </button>
-    </ActionTooltip>
-)
-
+                {/* Team Badge Container */}
+                <div className={cn(
+                    "relative group flex mx-auto h-[48px] w-[48px] transition-all duration-300 overflow-hidden",
+                    "border-2 border-transparent",
+                    // Shape: Circular for inactive, Squircle for active/hover
+                    isActive 
+                        ? "rounded-[12px] border-red-600 shadow-[0_0_15px_rgba(220,38,38,0.3)] scale-110" 
+                        : "rounded-[24px] group-hover:rounded-[12px] bg-[#18181b] group-hover:border-zinc-700"
+                )}>
+                    {/* Dark overlay for inactive servers */}
+                    {!isActive && (
+                        <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors z-10" />
+                    )}
+                    
+                    <Image 
+                        fill
+                        src={imageUrl}
+                        alt={name}
+                        className={cn(
+                            "object-cover transition-transform duration-500",
+                            isActive ? "scale-100" : "scale-110 group-hover:scale-100 grayscale-[0.5] group-hover:grayscale-0"
+                        )}
+                    />
+                </div>
+            </button>
+        </ActionTooltip>
+    )
 }

@@ -4,8 +4,6 @@
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
-    DialogFooter,
     DialogHeader,
     DialogTitle
 } from "@/components/ui/dialog"
@@ -19,90 +17,110 @@ import { useEffect, useState } from "react";
 import { FileUpload } from "@/components/file-upload";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { ChevronRight, Trophy, Zap, Activity } from "lucide-react"; 
 
-// Updated Schema: Validation rules change based on whether we are joining or creating
+const QUICK_JOIN_TEAMS = [
+    { name: "Scuderia Ferrari", id: "844cb7e1-64f5-4b14-81b6-867cff1425ae", color: "border-red-600", bg: "hover:bg-red-950/40" },
+    { name: "Red Bull Racing", id: "a7bb557c-2cda-4788-8721-d7ac2da1dfe9", color: "border-blue-700", bg: "hover:bg-blue-950/40" },
+    { name: "Mercedes AMG", id: "e197b2d6-c73b-4986-b025-9a91fbf95e11", color: "border-emerald-500", bg: "hover:bg-emerald-950/40" },
+     { name: "McLaren", id: "9ed8dfd7-431d-4055-856b-2b849c7fb6b7", color: "border-emerald-500", bg: "hover:bg-emerald-950/40" },
+];
+
 const formSchema = z.object({
     name: z.string().optional(),
     imageUrl: z.string().optional(),
     inviteCode: z.string().optional(),
 }).refine((data) => {
-    // If no invite code is provided, name and image MUST exist
     if (!data.inviteCode || data.inviteCode.trim() === "") {
         return !!(data.name && data.name.length > 0 && data.imageUrl && data.imageUrl.length > 0);
     }
     return true;
-}, {
-    message: "Server name and image are required",
-    path: ["name"], 
-});
+}, { message: "Required", path: ["name"] });
 
 export const InitialModal = () => {
     const [isMounted, setIsMounted] = useState(false);
     const [isJoining, setIsJoining] = useState(false); 
     const router = useRouter();
 
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
+    useEffect(() => { setIsMounted(true); }, []);
 
     const form = useForm({
         resolver: zodResolver(formSchema),
-        defaultValues: {
-            name: "",
-            imageUrl: "",
-            inviteCode: ""
-        }
+        defaultValues: { name: "", imageUrl: "", inviteCode: "" }
     });
 
     const isLoading = form.formState.isSubmitting;
 
+    const handleQuickJoin = (inviteId: string) => {
+        router.push(`/invite/${inviteId}`);
+    };
+
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         try {
             if (isJoining && values.inviteCode) {
-                // Logic: Extract code from full URL if needed
-                // Example: http://localhost:3000/invite/abc-123 -> abc-123
-                const inviteCode = values.inviteCode.includes("/invite/") 
+                const code = values.inviteCode.includes("/invite/") 
                     ? values.inviteCode.split("/invite/")[1] 
                     : values.inviteCode;
-
-                // Navigate directly to the invite page
-                router.push(`/invite/${inviteCode}`);
+                router.push(`/invite/${code}`);
                 return;
             }
-
-            // Standard Create Logic
             await axios.post("/api/servers", values);
             form.reset();
             router.refresh();
             window.location.reload();
-
-        } catch (error) {
-            console.log("Error in InitialModal:", error);
-        }
+        } catch (error) { console.error(error); }
     }
 
     if (!isMounted) return null;
 
     return (
         <Dialog open>
-            <DialogContent className="bg-white text-black p-0 overflow-hidden max-w-md" showCloseButton={false}>
-                <DialogHeader className="pt-8 px-6 space-y-2">
-                    <DialogTitle className="text-2xl text-center font-bold">
-                        {isJoining ? "Join a server" : "Customize your server"}
-                    </DialogTitle>
-                    <DialogDescription className="text-center text-zinc-500">
-                        {isJoining 
-                            ? "Paste an invite link below to join an existing crew." 
-                            : "Give your server a personality with a name and an image."}
-                    </DialogDescription>
-                </DialogHeader>
+            {/* FORCE FIXED WIDTH: Using min-w-[800px] and removing md: logic */}
+            <DialogContent className="bg-[#050505] text-white p-0 overflow-hidden max-w-[850px] min-w-[800px] h-[520px] border-zinc-800 border-[1px] shadow-[0_0_60px_-15px_rgba(220,38,38,0.4)]">
+                
+                <div className="flex w-full h-full">
+                    
+                    {/* LEFT SIDE: THE PADDOCK (Quick Join) */}
+                    <div className="w-[35%] bg-zinc-900/30 p-8 border-r border-zinc-800/50 flex flex-col">
+                        <div className="flex items-center gap-2 mb-10">
+                            <Zap className="w-4 h-4 text-red-600 fill-red-600" />
+                            <h2 className="text-[11px] font-black uppercase tracking-[0.3em] italic text-zinc-500">Fast_Entry</h2>
+                        </div>
+                        
+                        <div className="flex-1 space-y-4">
+                            {QUICK_JOIN_TEAMS.map((team) => (
+                                <button
+                                    key={team.id}
+                                    type="button"
+                                    onClick={() => handleQuickJoin(team.id)}
+                                    className={`w-full flex items-center justify-between p-4 bg-black/40 border-l-[3px] ${team.color} ${team.bg} transition-all duration-300 group rounded-r-sm`}
+                                >
+                                    <span className="text-[10px] font-black uppercase tracking-tighter group-hover:text-white text-zinc-400">{team.name}</span>
+                                    <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-red-600" />
+                                </button>
+                            ))}
+                        </div>
 
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                        <div className="space-y-6 px-6">
-                            {!isJoining ? (
-                                <>
-                                    <div className="flex items-center justify-center text-center">
+                        <div className="mt-auto pt-6 border-t border-zinc-800/50">
+                            <div className="flex items-center gap-2 text-[9px] font-mono text-zinc-600 uppercase">
+                                <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
+                                Connection: Encrypted
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* RIGHT SIDE: CONSTRUCTOR (Manual Controls) */}
+                    <div className="flex-1 p-10 flex flex-col bg-gradient-to-br from-black to-zinc-900/20">
+                        <DialogHeader className="mb-8">
+                            <DialogTitle className="text-4xl font-black italic uppercase tracking-tighter text-left leading-none">
+                                {isJoining ? "Join Grid" : "New Team"}
+                            </DialogTitle>
+                        </DialogHeader>
+
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 flex flex-col flex-1">
+                                {!isJoining ? (
+                                    <div className="flex flex-row items-center gap-8">
                                         <FormField
                                             control={form.control}
                                             name="imageUrl"
@@ -118,20 +136,37 @@ export const InitialModal = () => {
                                                 </FormItem>
                                             )}
                                         />
+                                        <div className="flex-1">
+                                            <FormField
+                                                control={form.control}
+                                                name="name"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel className="uppercase text-[10px] font-black text-zinc-500 tracking-[0.2em]">Constructor Name</FormLabel>
+                                                        <FormControl>
+                                                            <Input 
+                                                                className="bg-transparent border-0 border-b-2 border-zinc-800 focus:border-red-600 rounded-none px-0 text-xl h-10 transition-colors focus-visible:ring-0 placeholder:text-zinc-800" 
+                                                                placeholder="SCUDERIA..." 
+                                                                {...field}
+                                                            />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
                                     </div>
+                                ) : (
                                     <FormField
                                         control={form.control}
-                                        name="name"
+                                        name="inviteCode"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel className="uppercase text-xs font-bold text-zinc-500">
-                                                    Server name
-                                                </FormLabel>
+                                                <FormLabel className="uppercase text-[10px] font-black text-zinc-500 tracking-[0.2em]">Invite Signal</FormLabel>
                                                 <FormControl>
                                                     <Input 
-                                                        className="bg-zinc-300/50 border-0 focus-visible:ring-0 text-black focus-visible:ring-offset-0" 
-                                                        placeholder="Enter server name" 
-                                                        disabled={isLoading} 
+                                                        className="bg-transparent border-0 border-b-2 border-zinc-800 focus:border-red-600 rounded-none px-0 text-xl h-10 transition-colors focus-visible:ring-0" 
+                                                        placeholder="Enter code or URL..." 
                                                         {...field}
                                                     />
                                                 </FormControl>
@@ -139,51 +174,25 @@ export const InitialModal = () => {
                                             </FormItem>
                                         )}
                                     />
-                                </>
-                            ) : (
-                                <FormField
-                                    control={form.control}
-                                    name="inviteCode"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="uppercase text-xs font-bold text-zinc-500">
-                                                Invite Link
-                                            </FormLabel>
-                                            <FormControl>
-                                                <Input 
-                                                    className="bg-zinc-300/50 border-0 focus-visible:ring-0 text-black focus-visible:ring-offset-0" 
-                                                    placeholder="e.g. https://app.com/invite/xxxx" 
-                                                    disabled={isLoading} 
-                                                    {...field}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            )}
+                                )}
 
-                            <div className="text-center">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setIsJoining(!isJoining);
-                                        form.clearErrors();
-                                    }}
-                                    className="text-xs text-zinc-500 hover:text-zinc-700 underline transition"
-                                >
-                                    {isJoining ? "Create a new server instead" : "Have an invite link? Join a server"}
-                                </button>
-                            </div>
-                        </div>
-
-                        <DialogFooter className="bg-gray-100 px-6 py-4">
-                            <Button variant="primary" disabled={isLoading} className="w-full">
-                                {isJoining ? "Join" : "Create"}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </Form>
+                                <div className="mt-auto space-y-4">
+                                    <Button disabled={isLoading} className="w-full bg-red-600 hover:bg-red-700 text-white font-black uppercase italic tracking-tighter h-14 text-lg shadow-[0_5px_15px_-5px_rgba(220,38,38,0.4)]">
+                                        {isJoining ? "Enter Session" : "Deploy Constructor"}
+                                    </Button>
+                                    
+                                    <button
+                                        type="button"
+                                        onClick={() => { setIsJoining(!isJoining); form.clearErrors(); }}
+                                        className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600 hover:text-red-500 transition text-left"
+                                    >
+                                        {isJoining ? "// Open Constructor Lab" : "// Manual Paddock Entry"}
+                                    </button>
+                                </div>
+                            </form>
+                        </Form>
+                    </div>
+                </div>
             </DialogContent>
         </Dialog>
     )

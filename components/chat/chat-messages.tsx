@@ -3,7 +3,7 @@
 
 import React, { ComponentRef, Fragment, useEffect, useRef, useState } from "react";
 import { Member, Message, Profile } from "@prisma/client";
-import { Loader2, ServerCrash } from "lucide-react";
+import { Loader2, ServerCrash, Activity, Wifi, History } from "lucide-react";
 import { format } from "date-fns";
 
 import { useChatQuery } from "@/hooks/use-chat-query";
@@ -48,7 +48,6 @@ export function ChatMessages({
   const addKey = `chat:${chatId}:messages`;
   const updateKey = `chat:${chatId}:messages:update`;
 
-  // Use ComponentRef instead of ElementRef to avoid deprecation warnings
   const chatRef = useRef<ComponentRef<"div">>(null);
   const bottomRef = useRef<ComponentRef<"div">>(null);
 
@@ -68,8 +67,6 @@ export function ChatMessages({
 
   useChatSocket({ queryKey, addKey, updateKey });
 
-  // Type casting 'as' is used here because useChatScroll likely expects 
-  // RefObject<HTMLDivElement> without null, which matches ComponentRef<'div'>
   useChatScroll({
     chatRef: chatRef as React.RefObject<HTMLDivElement>,
     bottomRef: bottomRef as React.RefObject<HTMLDivElement>,
@@ -78,50 +75,71 @@ export function ChatMessages({
     count: data?.pages?.[0]?.items?.length ?? 0
   });
 
-  // Hydration safety: ensure server and client match
+  // INITIAL BOOT-UP / LOADING STATE
   if (!isMounted || status === "pending") {
     return (
-      <div className="flex flex-col flex-1 justify-center items-center">
-        <Loader2 className="h-7 w-7 text-zinc-500 animate-spin my-4" />
-        <p className="text-xs text-zinc-500 dark:text-zinc-400">
-          Loading messages...
+      <div className="flex flex-col flex-1 justify-center items-center bg-[#1e1e2b]">
+        <div className="relative flex items-center justify-center">
+            <Loader2 className="h-10 w-10 text-red-600 animate-spin" />
+            <Wifi className="absolute h-4 w-4 text-red-600 animate-pulse" />
+        </div>
+        <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-zinc-500 mt-4 italic">
+          Establishing_Uplink...
         </p>
       </div>
     );
   }
 
+  // CONNECTION FAILURE STATE
   if (status === "error") {
     return (
-      <div className="flex flex-col flex-1 justify-center items-center">
-        <ServerCrash className="h-7 w-7 text-zinc-500 my-4" />
-        <p className="text-xs text-zinc-500 dark:text-zinc-400">
-          Something went wrong!
+      <div className="flex flex-col flex-1 justify-center items-center bg-[#1e1e2b]">
+        <ServerCrash className="h-10 w-10 text-red-600 my-4" />
+        <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-red-600 italic">
+          Critical_System_Failure // No_Signal
         </p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="mt-4 text-[9px] font-black uppercase italic tracking-widest text-zinc-400 hover:text-white transition"
+        >
+          {">>"} Reboot_System
+        </button>
       </div>
     );
   }
 
   return (
-    <div ref={chatRef} className="flex-1 flex flex-col py-4 overflow-y-auto">
+    <div 
+      ref={chatRef} 
+      className="flex-1 flex flex-col py-4 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent hover:scrollbar-thumb-red-600/20 transition-all"
+    >
       {!hasNextPage && <div className="flex-1" />}
       {!hasNextPage && <ChatWelcome name={name} type={type} />}
       
+      {/* HISTORY RETRIEVAL SECTION */}
       {hasNextPage && (
-        <div className="flex justify-center">
+        <div className="flex justify-center my-4">
           {isFetchingNextPage ? (
-            <Loader2 className="h-6 w-6 text-zinc-500 animate-spin my-4" />
+            <div className="flex items-center gap-x-2">
+                <Loader2 className="h-4 w-4 text-red-600 animate-spin" />
+                <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Syncing_Logs...</span>
+            </div>
           ) : (
             <button
               onClick={() => fetchNextPage()}
-              className="text-zinc-500 hover:text-zinc-600 dark:text-zinc-400 text-xs my-4 dark:hover:text-zinc-300 transition"
+              className="flex items-center gap-x-2 px-4 py-1 bg-zinc-800/40 border border-zinc-700/50 hover:border-red-600/50 rounded-sm group transition-all"
             >
-              Load previous messages
+              <History className="h-3 w-3 text-zinc-500 group-hover:text-red-600 transition" />
+              <span className="text-[10px] font-black uppercase italic tracking-widest text-zinc-500 group-hover:text-white transition">
+                Retrieve_History
+              </span>
             </button>
           )}
         </div>
       )}
 
-      <div className="flex flex-col-reverse mt-auto">
+      {/* REVERSE MESSAGE FEED */}
+      <div className="flex flex-col-reverse mt-auto px-1">
         {data?.pages?.map((group, i) => (
           <Fragment key={i}>
             {group.items.map((message: MessagesWithMemberWithProfile) => (
@@ -142,7 +160,7 @@ export function ChatMessages({
           </Fragment>
         ))}
       </div>
-      <div ref={bottomRef} />
+      <div ref={bottomRef} className="h-[1px]" />
     </div>
   );
 }

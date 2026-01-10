@@ -9,7 +9,9 @@ import {
   Shield,
   ShieldAlert,
   ShieldCheck,
-  ShieldQuestion
+  ShieldQuestion,
+  Users2,
+  Trophy
 } from "lucide-react";
 import { MemberRole } from "@prisma/client";
 import qs from "query-string";
@@ -40,9 +42,9 @@ import { useModal } from "@/hooks/use-modal-store";
 import { ServerWithMembersWithProfiles } from "@/types";
 
 const roleIconMap = {
-  GUEST: null,
-  MODERATOR: <ShieldCheck className="h-4 w-4 ml-2 text-indigo-500" />,
-  ADMIN: <ShieldAlert className="h-4 w-4 ml-2 text-rose-500" />
+  GUEST: <Shield className="h-3.5 w-3.5 ml-2 text-zinc-500" />,
+  MODERATOR: <ShieldCheck className="h-3.5 w-3.5 ml-2 text-emerald-500" />,
+  ADMIN: <ShieldAlert className="h-3.5 w-3.5 ml-2 text-red-600" />
 };
 
 export function MembersModal() {
@@ -56,14 +58,11 @@ export function MembersModal() {
   const onKick = async (memberId: string) => {
     try {
       setLoadingId(memberId);
-
       const url = qs.stringifyUrl({
         url: `/api/members/${memberId}`,
         query: { serverId: server?.id }
       });
-
       const response = await axios.delete(url);
-
       router.refresh();
       onOpen("members", { server: response.data });
     } catch (error) {
@@ -76,14 +75,11 @@ export function MembersModal() {
   const onRoleChange = async (memberId: string, role: MemberRole) => {
     try {
       setLoadingId(memberId);
-
       const url = qs.stringifyUrl({
         url: `/api/members/${memberId}`,
         query: { serverId: server?.id }
       });
-
       const response = await axios.patch(url, { role });
-
       router.refresh();
       onOpen("members", { server: response.data });
     } catch (error) {
@@ -95,79 +91,101 @@ export function MembersModal() {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-white text-black overflow-hidden">
-        <DialogHeader className="pt-8 px-6">
-          <DialogTitle className="text-2xl text-center font-bold">
-            Manage Members
+      <DialogContent className="bg-[#1e1e2b] text-zinc-200 p-0 overflow-hidden border border-zinc-800 shadow-2xl rounded-sm max-w-lg">
+        <DialogHeader className="pt-8 px-6 bg-[#161621] border-b border-zinc-800">
+          <div className="flex items-center gap-x-2 mb-1">
+            <Users2 className="h-4 w-4 text-red-600" />
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 italic">
+              Paddock_Registry
+            </span>
+          </div>
+          <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter text-white text-left">
+            Driver Roster
           </DialogTitle>
-          <DialogDescription className="text-center text-zinc-500">
-            {server?.members?.length} Members
+          <DialogDescription className="text-left text-zinc-400 text-xs font-mono uppercase tracking-widest pt-1">
+            {server?.members?.length} Personnel_Linked
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="mt-8 max-h-[420px] pr-6">
+
+        <ScrollArea className="mt-2 max-h-[420px] px-6 py-4 scrollbar-thin scrollbar-thumb-zinc-800">
           {server?.members?.map((member) => (
-            <div key={member.id} className="flex items-center gap-x-2 mb-6">
-              <UserAvatar src={member.profile.imageUrl} />
-              <div className="flex flex-col gap-y-1">
-                <div className="text-xs font-semibold flex items-center">
+            <div 
+              key={member.id} 
+              className="flex items-center gap-x-3 mb-4 p-3 bg-black/20 border border-zinc-800/50 hover:border-red-600/30 transition-all group rounded-sm"
+            >
+              <UserAvatar 
+                src={member.profile.imageUrl} 
+                className="h-10 w-10 border border-zinc-700 group-hover:border-red-600/50 transition-colors"
+              />
+              <div className="flex flex-col gap-y-0.5">
+                <div className="text-[13px] font-black uppercase italic tracking-tighter flex items-center text-white">
                   {member.profile.name}
                   {roleIconMap[member.role]}
                 </div>
-                <p className="text-xs text-zinc-500">{member.profile.email}</p>
+                <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-tighter">
+                  {member.profile.email}
+                </p>
               </div>
-              {server.profileId !== member.profileId &&
-                loadingId !== member.id && (
-                  <div className="ml-auto">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger>
-                        <MoreVertical className="h-4 w-4 text-zinc-500" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent side="left">
-                        <DropdownMenuSub>
-                          <DropdownMenuSubTrigger className="flex items-center">
-                            <ShieldQuestion className="w-4 h-4 mr-2" />
-                            <span>Role</span>
-                          </DropdownMenuSubTrigger>
-                          <DropdownMenuPortal>
-                            <DropdownMenuSubContent>
-                              <DropdownMenuItem
-                                onClick={() => onRoleChange(member.id, "GUEST")}
-                              >
-                                <Shield className="h-4 w-4 mr-2" />
-                                Guest
-                                {member.role === "GUEST" && (
-                                  <Check className="h4 w-4 ml-auto" />
-                                )}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  onRoleChange(member.id, "MODERATOR")
-                                }
-                              >
-                                <ShieldCheck className="h-4 w-4 mr-2" />
-                                Moderator
-                                {member.role === "MODERATOR" && (
-                                  <Check className="h4 w-4 ml-auto" />
-                                )}
-                              </DropdownMenuItem>
-                            </DropdownMenuSubContent>
-                          </DropdownMenuPortal>
-                        </DropdownMenuSub>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => onKick(member.id)}>
-                          <Gavel className="h-4 w-4 mr-2" />
-                          Kick
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                )}
+
+              {server.profileId !== member.profileId && loadingId !== member.id && (
+                <div className="ml-auto">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="focus:outline-none">
+                      <MoreVertical className="h-4 w-4 text-zinc-500 hover:text-white transition" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent 
+                      side="left" 
+                      className="bg-[#161621] border-zinc-800 text-zinc-300 rounded-sm min-w-[140px]"
+                    >
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger className="flex items-center text-[10px] font-black uppercase italic tracking-widest focus:bg-zinc-800">
+                          <ShieldQuestion className="w-3.5 h-3.5 mr-2 text-zinc-500" />
+                          <span>Assign Role</span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                          <DropdownMenuSubContent className="bg-[#161621] border-zinc-800 text-zinc-300 ml-1">
+                            <DropdownMenuItem
+                              onClick={() => onRoleChange(member.id, "GUEST")}
+                              className="text-[10px] font-black uppercase italic tracking-widest focus:bg-zinc-800 focus:text-white"
+                            >
+                              <Shield className="h-3.5 w-3.5 mr-2" />
+                              Reserve Driver
+                              {member.role === "GUEST" && (
+                                <Check className="h-3 w-3 ml-auto text-red-600" />
+                              )}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => onRoleChange(member.id, "MODERATOR")}
+                              className="text-[10px] font-black uppercase italic tracking-widest focus:bg-zinc-800 focus:text-white"
+                            >
+                              <ShieldCheck className="h-3.5 w-3.5 mr-2 text-emerald-500" />
+                              Lead Engineer
+                              {member.role === "MODERATOR" && (
+                                <Check className="h-3 w-3 ml-auto text-red-600" />
+                              )}
+                            </DropdownMenuItem>
+                          </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                      </DropdownMenuSub>
+                      <DropdownMenuSeparator className="bg-zinc-800" />
+                      <DropdownMenuItem 
+                        onClick={() => onKick(member.id)}
+                        className="text-[10px] font-black uppercase italic tracking-widest text-red-500 focus:bg-red-600/10 focus:text-red-500"
+                      >
+                        <Gavel className="h-3.5 w-3.5 mr-2" />
+                        Black Flag (Kick)
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              )}
               {loadingId === member.id && (
-                <Loader2 className="animate-spin text-zinc-500 ml-auto w-4 h-4" />
+                <Loader2 className="animate-spin text-red-600 ml-auto w-4 h-4" />
               )}
             </div>
           ))}
         </ScrollArea>
+        <div className="bg-[#161621] h-1 w-full bg-[repeating-linear-gradient(45deg,#ef4444,#ef4444_10px,#000_10px,#000_20px)] opacity-20" />
       </DialogContent>
     </Dialog>
   );

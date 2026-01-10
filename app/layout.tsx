@@ -27,7 +27,7 @@ export default function RootLayout({
     <ClerkProvider publishableKey={key}>
       <html lang="en" suppressHydrationWarning>
         {/* Added bg-zinc-600 to the body class list below */}
-        <body className={` ${geistSans.variable} ${geistMono.variable} bg-[#313338] antialiased`}>
+        <body className={` ${geistSans.variable} ${geistMono.variable} dark:bg-[#1e1e2b] antialiased`}>
           <ThemeProvider
             attribute="class" 
             defaultTheme="dark" 
