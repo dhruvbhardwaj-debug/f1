@@ -22,8 +22,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const key =process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY; 
   return (
-    <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+    <ClerkProvider publishableKey={key}>
       <html lang="en" suppressHydrationWarning>
         {/* Added bg-zinc-600 to the body class list below */}
         <body className={` ${geistSans.variable} ${geistMono.variable} bg-[#313338] antialiased`}>
