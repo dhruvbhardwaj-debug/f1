@@ -3,13 +3,13 @@ import { Channel, ChannelType, Server } from "@prisma/client"; // Import Prisma 
 import { create } from "zustand";
  
 export type ModalType = "createServer" | "invite" | "editServer" | "members" | "createChannel" |"leaveServer"|"deleteServer" | "deleteChannel"
-  | "editChannel"|"messageFile" |"deleteMessage";
+  | "editChannel"|"messageFile" |"deleteMessage"|"carDesign";
 
 interface ModalData {
   server?: Server;
-  channel?: Channel;       // Added for future "editChannel" usage
-  channelType?: ChannelType; // This fixes your current error
-  apiUrl?: string;             // Add this
+  channel?: Channel;       
+  channelType?: ChannelType;
+  apiUrl?: string;             
   query?: Record<string, any>;
 }
 

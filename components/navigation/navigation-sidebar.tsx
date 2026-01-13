@@ -6,6 +6,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import { NavigationItem } from "./navigation-item";
 import { ModeToggle } from "../ui/themeModes";
 import { UserButton } from "@clerk/nextjs";
+import { CarDesign } from "./carDesign";
 
 export const NavigationSidebar = async () => {
   const profile = await currentProfile();
@@ -52,6 +53,7 @@ export const NavigationSidebar = async () => {
 
       <div className="relative z-10 flex flex-col items-center h-full w-full space-y-4">
         <NavigationAction />
+        <CarDesign/>
         
         {/* <Separator className="h-[2px] bg-red-600/50 rounded-full w-10 mx-auto" /> */}
         
