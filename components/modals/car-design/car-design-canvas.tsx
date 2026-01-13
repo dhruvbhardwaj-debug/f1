@@ -64,7 +64,7 @@ const CarDesignCanvas: React.FC = () => {
   const [newLabelText, setNewLabelText] = useState<string>("");
 
   const [config, setConfig] = useState<CarConfig>({
-    liveryColor: '#e10600',
+    liveryColor: '#f5f7f6',
     paintOpacity: 0.35,
     wingAngle: 14,
     suspensionStiffness: 65,
