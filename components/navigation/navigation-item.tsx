@@ -22,8 +22,7 @@ export const NavigationItem = ({ id, imageUrl, name }: NavigationItemProps) => {
         <ActionTooltip side="right" label={name} align="center">
             <button
                 onClick={() => router.push(`/servers/${id}`)}
-                className="group relative flex items-center w-full mb-1"
-            >
+                className="group relative flex items-center w-full mb-1">
                 {/* F1 Active Indicator (The "Ready" Light) */}
                 <div className={cn(
                     "absolute left-0 bg-red-600 rounded-r-full transition-all duration-300 w-[4px]",
